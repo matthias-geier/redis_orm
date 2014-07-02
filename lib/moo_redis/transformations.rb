@@ -29,5 +29,21 @@ module MooRedis
       return Database.db.get(key)
     end
     module_function :transform_string
+
+    def transform_set(key)
+      return Database.db.smembers(key)
+    end
+    module_function :transform_set
+
+    def transform_zset(key)
+      return Database.db.zrange(key, 0, -1, :withscores => true).
+        reduce({}) do |acc, (v, k)|
+
+        acc[k.to_i] ||= []
+        acc[k.to_i] << v
+        acc
+      end
+    end
+    module_function :transform_zset
   end
 end

@@ -6,7 +6,6 @@ require './moo_redis/extensions/string'
 require './moo_redis/database'
 require './moo_redis/transformations'
 require './moo_redis/key_value'
-require './moo_redis/key_array'
 require './moo_redis/key_hash'
 
 class User < MooRedis::KeyHash
@@ -65,11 +64,6 @@ describe User do
       @user[f] = "gnu#{i}"
       assert_equal "gnu#{i}", @user[f.to_s]
     end
-  end
-
-  it "should not set undefined fields" do
-    @user[:moo] = "gnu"
-    refute @user[:moo]
   end
 
   it "should multiassign values with update_fields by automatism" do

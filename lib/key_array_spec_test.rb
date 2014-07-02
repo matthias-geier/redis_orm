@@ -7,7 +7,6 @@ require './moo_redis/database'
 require './moo_redis/transformations'
 require './moo_redis/key_value'
 require './moo_redis/key_array'
-require './moo_redis/key_hash'
 
 class Monkey < MooRedis::KeyArray
 end

@@ -1,8 +1,6 @@
 
 module MooRedis
   class KeyHash < KeyValue
-    private :value, :value=
-
     def self.find(id, asave=false)
       key = "#{self.database_key_name}:#{id}"
       return unless Database.db.exists(key)
