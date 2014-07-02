@@ -40,7 +40,7 @@ module MooRedis
         acc[k.to_i] ||= []
         v = [v] unless v.is_a?(Array)
         v.map!(&:to_s)
-        acc[k.to_i] += v - (v & acc[k.to_i])
+        acc[k.to_i] += v - acc[k.to_i]
         acc
       end
       self.autosave
