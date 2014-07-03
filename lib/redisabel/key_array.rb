@@ -26,11 +26,10 @@ module Redisabel
 
     def insert(i, value)
       params = i.nil? ? [value] : [i, value]
-      amethod = i.nil? ? :push : :insert
+      amethod, lmethod = i.nil? ? [:push, :rpush] : [:insert, :lset]
       @data.send(amethod, *params)
       if self.autosave? && !self.id.to_s.empty?
-        method = i.nil? ? :rpush : :lset
-        Database.db.send(method, self.database_key, *params)
+        Database.db.send(lmethod, self.database_key, *params)
       end
     end
     alias_method :[]=, :insert

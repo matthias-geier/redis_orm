@@ -1,6 +1,7 @@
 
 module Redisabel
   module HashFunctions
+
     def key_valid?(key)
       return key.is_a?(Numeric)
     end
