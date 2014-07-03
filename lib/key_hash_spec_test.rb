@@ -2,17 +2,17 @@ gem 'minitest'
 
 require 'redis'
 require 'minitest/autorun'
-require './moo_redis/extensions/string'
-require './moo_redis/database'
-require './moo_redis/transformations'
-require './moo_redis/hash_functions'
-require './moo_redis/key_value'
-require './moo_redis/key_hash'
+require './redisabel/extensions/string'
+require './redisabel/database'
+require './redisabel/transformations'
+require './redisabel/hash_functions'
+require './redisabel/key_value'
+require './redisabel/key_hash'
 
-class User < MooRedis::KeyHash
+class User < Redisabel::KeyHash
 end
 
-MooRedis::Database.create
+Redisabel::Database.create
 
 describe User do
   before do
@@ -81,22 +81,22 @@ describe User do
       @user.id = 'klaus'
       @user.update_data('id' => "klaus", 'email' => "a@b.c", 'created_at' =>
         "2012-12-12", 'name' => "kurz")
-      if MooRedis::Database.db.exists("user:klaus")
-        MooRedis::Database.db.del("user:klaus")
+      if Redisabel::Database.db.exists("user:klaus")
+        Redisabel::Database.db.del("user:klaus")
       end
     end
 
     after do
       @user.id = nil
       @user.value = {}
-      if MooRedis::Database.db.exists("user:klaus")
-        MooRedis::Database.db.del("user:klaus")
+      if Redisabel::Database.db.exists("user:klaus")
+        Redisabel::Database.db.del("user:klaus")
       end
     end
 
     it "should save to database" do
       @user.save
-      saved_data = MooRedis::Transformations.transform("user:klaus")
+      saved_data = Redisabel::Transformations.transform("user:klaus")
       assert_equal @user.value, saved_data
     end
 

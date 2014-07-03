@@ -1,5 +1,5 @@
 
-module MooRedis
+module Redisabel
   class KeyValue
     extend Transformations
 

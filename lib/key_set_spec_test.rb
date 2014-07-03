@@ -2,16 +2,16 @@ gem 'minitest'
 
 require 'redis'
 require 'minitest/autorun'
-require './moo_redis/extensions/string'
-require './moo_redis/database'
-require './moo_redis/transformations'
-require './moo_redis/key_value'
-require './moo_redis/key_set'
+require './redisabel/extensions/string'
+require './redisabel/database'
+require './redisabel/transformations'
+require './redisabel/key_value'
+require './redisabel/key_set'
 
-class Donkey < MooRedis::KeySet
+class Donkey < Redisabel::KeySet
 end
 
-MooRedis::Database.create
+Redisabel::Database.create
 
 describe Donkey do
   before do
@@ -84,22 +84,22 @@ describe Donkey do
     before do
       @donkey.id = 'klaus'
       @donkey.push("klaus", "a@b.c", "kurz")
-      if MooRedis::Database.db.exists("donkey:klaus")
-        MooRedis::Database.db.del("donkey:klaus")
+      if Redisabel::Database.db.exists("donkey:klaus")
+        Redisabel::Database.db.del("donkey:klaus")
       end
     end
 
     after do
       @donkey.id = ''
       @donkey.value = []
-      if MooRedis::Database.db.exists("donkey:klaus")
-        MooRedis::Database.db.del("donkey:klaus")
+      if Redisabel::Database.db.exists("donkey:klaus")
+        Redisabel::Database.db.del("donkey:klaus")
       end
     end
 
     it "should save to database" do
       @donkey.save
-      saved_data = MooRedis::Transformations.transform("donkey:klaus")
+      saved_data = Redisabel::Transformations.transform("donkey:klaus")
       assert_equal @donkey.value.sort, saved_data.sort
     end
 

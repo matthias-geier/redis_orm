@@ -1,5 +1,5 @@
 
-module MooRedis
+module Redisabel
   class KeyArray < KeyValue
 
     def self.data_type

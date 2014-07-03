@@ -2,15 +2,15 @@ gem 'minitest'
 
 require 'redis'
 require 'minitest/autorun'
-require './moo_redis/extensions/string'
-require './moo_redis/database'
-require './moo_redis/transformations'
-require './moo_redis/key_value'
+require './redisabel/extensions/string'
+require './redisabel/database'
+require './redisabel/transformations'
+require './redisabel/key_value'
 
-class Mule < MooRedis::KeyValue
+class Mule < Redisabel::KeyValue
 end
 
-MooRedis::Database.create
+Redisabel::Database.create
 
 describe Mule do
   before do
@@ -84,22 +84,22 @@ describe Mule do
     before do
       @mule.id = 'klaus'
       @mule.value = 'cool'
-      if MooRedis::Database.db.exists("mule:klaus")
-        MooRedis::Database.db.del("mule:klaus")
+      if Redisabel::Database.db.exists("mule:klaus")
+        Redisabel::Database.db.del("mule:klaus")
       end
     end
 
     after do
       @mule.id = ''
       @mule.value = ''
-      if MooRedis::Database.db.exists("mule:klaus")
-        MooRedis::Database.db.del("mule:klaus")
+      if Redisabel::Database.db.exists("mule:klaus")
+        Redisabel::Database.db.del("mule:klaus")
       end
     end
 
     it "should save to database" do
       @mule.save
-      saved_data = MooRedis::Transformations.transform("mule:klaus")
+      saved_data = Redisabel::Transformations.transform("mule:klaus")
       assert_equal @mule.value, saved_data
     end
 

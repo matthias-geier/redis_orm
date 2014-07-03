@@ -1,5 +1,5 @@
 
-module MooRedis
+module Redisabel
   class KeySet < KeyValue
     def self.data_type
       return Array

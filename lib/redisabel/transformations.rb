@@ -1,5 +1,5 @@
 
-module MooRedis
+module Redisabel
   module Transformations
     def detect_type(key)
       return Database.db.type(key)

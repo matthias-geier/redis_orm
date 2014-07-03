@@ -1,5 +1,5 @@
 
-module MooRedis
+module Redisabel
   class Database
     attr_reader :db
     @@db = nil

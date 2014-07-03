@@ -2,21 +2,21 @@ gem 'minitest'
 
 require 'redis'
 require 'minitest/autorun'
-require './moo_redis/extensions/string'
-require './moo_redis/database'
-require './moo_redis/transformations'
-require './moo_redis/hash_functions'
-require './moo_redis/key_value'
-require './moo_redis/key_ordered_set'
-require './moo_redis/key_hash'
+require './redisabel/extensions/string'
+require './redisabel/database'
+require './redisabel/transformations'
+require './redisabel/hash_functions'
+require './redisabel/key_value'
+require './redisabel/key_ordered_set'
+require './redisabel/key_hash'
 
-class Logs < MooRedis::KeyOrderedSet
+class Logs < Redisabel::KeyOrderedSet
 end
 
-class LogEntry < MooRedis::KeyHash
+class LogEntry < Redisabel::KeyHash
 end
 
-MooRedis::Database.create
+Redisabel::Database.create
 
 describe Logs do
   before do

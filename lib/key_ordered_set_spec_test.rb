@@ -2,17 +2,17 @@ gem 'minitest'
 
 require 'redis'
 require 'minitest/autorun'
-require './moo_redis/extensions/string'
-require './moo_redis/database'
-require './moo_redis/transformations'
-require './moo_redis/hash_functions'
-require './moo_redis/key_value'
-require './moo_redis/key_ordered_set'
+require './redisabel/extensions/string'
+require './redisabel/database'
+require './redisabel/transformations'
+require './redisabel/hash_functions'
+require './redisabel/key_value'
+require './redisabel/key_ordered_set'
 
-class Croc < MooRedis::KeyOrderedSet
+class Croc < Redisabel::KeyOrderedSet
 end
 
-MooRedis::Database.create
+Redisabel::Database.create
 
 describe Croc do
   before do
@@ -52,22 +52,22 @@ describe Croc do
     before do
       @croc.id = 'croc'
       @croc.update_data(40 => 'moo', 20 => 'gnu')
-      if MooRedis::Database.db.exists("croc:croc")
-        MooRedis::Database.db.del("croc:croc")
+      if Redisabel::Database.db.exists("croc:croc")
+        Redisabel::Database.db.del("croc:croc")
       end
     end
 
     after do
       @croc.id = nil
       @croc.value = {}
-      if MooRedis::Database.db.exists("croc:croc")
-        MooRedis::Database.db.del("croc:croc")
+      if Redisabel::Database.db.exists("croc:croc")
+        Redisabel::Database.db.del("croc:croc")
       end
     end
 
     it "should save to database" do
       @croc.save
-      saved_data = MooRedis::Transformations.transform("croc:croc")
+      saved_data = Redisabel::Transformations.transform("croc:croc")
       assert_equal @croc.value, saved_data
     end
 

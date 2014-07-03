@@ -2,16 +2,16 @@ gem 'minitest'
 
 require 'redis'
 require 'minitest/autorun'
-require './moo_redis/extensions/string'
-require './moo_redis/database'
-require './moo_redis/transformations'
-require './moo_redis/key_value'
-require './moo_redis/key_array'
+require './redisabel/extensions/string'
+require './redisabel/database'
+require './redisabel/transformations'
+require './redisabel/key_value'
+require './redisabel/key_array'
 
-class Monkey < MooRedis::KeyArray
+class Monkey < Redisabel::KeyArray
 end
 
-MooRedis::Database.create
+Redisabel::Database.create
 
 describe Monkey do
   before do
@@ -78,22 +78,22 @@ describe Monkey do
     before do
       @monkey.id = 'klaus'
       @monkey.push("klaus", "a@b.c", "kurz")
-      if MooRedis::Database.db.exists("monkey:klaus")
-        MooRedis::Database.db.del("monkey:klaus")
+      if Redisabel::Database.db.exists("monkey:klaus")
+        Redisabel::Database.db.del("monkey:klaus")
       end
     end
 
     after do
       @monkey.id = ''
       @monkey.value = []
-      if MooRedis::Database.db.exists("monkey:klaus")
-        MooRedis::Database.db.del("monkey:klaus")
+      if Redisabel::Database.db.exists("monkey:klaus")
+        Redisabel::Database.db.del("monkey:klaus")
       end
     end
 
     it "should save to database" do
       @monkey.save
-      saved_data = MooRedis::Transformations.transform("monkey:klaus")
+      saved_data = Redisabel::Transformations.transform("monkey:klaus")
       assert_equal @monkey.value, saved_data
     end
 

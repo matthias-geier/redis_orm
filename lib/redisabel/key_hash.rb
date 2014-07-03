@@ -1,5 +1,5 @@
 
-module MooRedis
+module Redisabel
   class KeyHash < KeyValue
     include HashFunctions
 
