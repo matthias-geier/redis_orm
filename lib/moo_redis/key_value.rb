@@ -95,7 +95,7 @@ module MooRedis
     end
 
     def value
-      return @data
+      return @data.dup
     end
 
     def value=(val)
