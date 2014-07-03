@@ -1,49 +1,59 @@
 
 module MooRedis
   class KeyArray < KeyValue
+
+    def self.data_type
+      return Array
+    end
+
     def [](i)
       return @data[i]
     end
 
-    def []=(i, value)
-      tmp_array = []
-      tmp_array[i] = value
-      self.update_data(nil, tmp_array)
+    def delete(value)
+      if @data.delete(value) && self.autosave? && !self.id.to_s.empty?
+        Database.db.lrem(self.database_key, 0, value)
+      end
     end
 
-    def update_data(*values)
-      id = values.shift
-      values = values.first if values.first.is_a?(Array)
-      self.id = id unless id.nil?
-      unless values.is_a?(Array)
-        raise ArgumentError.new("update_data expects an Array")
+    def delete_at(i)
+      if @data.delete_at(i) && self.autosave? && !self.id.to_s.empty?
+        tmp_value = Time.now.to_s
+        self.insert(i, tmp_value)
+        Database.db.lrem(self.database_key, 0, tmp_value)
       end
+    end
 
-      @data ||= []
-      count = [@data.size, values.size].max
-      for i in 0...count
-        @data[i] = values[i] unless values[i].nil?
+    def insert(i, value)
+      params = i.nil? ? [value] : [i, value]
+      amethod = i.nil? ? :push : :insert
+      @data.send(amethod, *params)
+      if self.autosave? && !self.id.to_s.empty?
+        method = i.nil? ? :rpush : :lset
+        Database.db.send(method, self.database_key, *params)
       end
-      self.autosave
+    end
+    alias_method :[]=, :insert
+
+    def push(*values)
+      values = values.shift if values.first.is_a?(Array)
+      values.each{ |v| self.insert(nil, v) }
     end
 
     def save
-      return false if self.id.to_s.empty?
-      key = self.database_key
-      Database.db.del(key)
-      results = @data.map{ |v| Database.db.rpush(key, v) }
-      return results.all?
-    end
-
-    def load
-      key = self.database_key
-      data = self.class.transform(key)
-      self.update_data(nil, data)
+      return super do |key|
+        Database.db.del(key)
+        results = @data.map{ |v| Database.db.rpush(key, v.to_s) }
+        next results.all?
+      end
     end
 
     def to_ary
+      return @data
+    end
+
+    def to_a
       return @data.dup
     end
-    alias_method :to_a, :to_ary
   end
 end

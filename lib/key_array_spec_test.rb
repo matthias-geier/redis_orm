@@ -23,7 +23,8 @@ describe Monkey do
   end
 
   it "should find the object in the database and create initialize" do
-    @monkey.update_data('25', 'franz')
+    @monkey.id = '25'
+    @monkey.push('franz')
     @monkey.save
 
     loaded_monkey = Monkey.find("25")
@@ -36,27 +37,27 @@ describe Monkey do
   end
 
   it "should initialize with empty array" do
-    assert_equal([], @monkey)
+    assert_equal([], @monkey.value)
   end
 
   it "should implement eql? and == and compare internal arrays" do
     cmp = ['franz']
-    @monkey.update_data('25', cmp)
-    assert @monkey == cmp
-    assert @monkey.eql?(cmp)
+    @monkey.value = cmp
+    assert @monkey == Monkey.new(false, nil, cmp)
+    assert @monkey.eql?(Monkey.new(false, nil, cmp))
   end
 
   it "should implement empty? like an array" do
     assert @monkey.empty?
-    @monkey.update_data('25', 'franz')
+    @monkey.push('franz')
     refute @monkey.empty?
   end
 
   it "should behave like an array on inspect and to_s" do
     cmp = ['franz']
-    @monkey.update_data('25', cmp)
-    assert_equal cmp.inspect, @monkey.inspect
-    assert_equal cmp.to_s, @monkey.to_s
+    @monkey.value = cmp
+    assert_equal "Monkey: #{cmp.inspect}", @monkey.inspect
+    assert_equal "Monkey:", @monkey.to_s
   end
 
   it "should set and get the values for each defined field" do
@@ -68,21 +69,23 @@ describe Monkey do
 
   it "should multiassign values with update_fields by automatism" do
     fields = ['name', 'email', 'created_at']
-    @monkey.update_data('25', *fields)
+    @monkey.push(*fields)
 
     fields.each_with_index{ |f, i| assert_equal f, @monkey[i] }
   end
 
   describe "with set fields" do
     before do
-      @monkey.update_data("klaus", "a@b.c", "kurz")
+      @monkey.id = 'klaus'
+      @monkey.push("klaus", "a@b.c", "kurz")
       if MooRedis::Database.db.exists("monkey:klaus")
         MooRedis::Database.db.del("monkey:klaus")
       end
     end
 
     after do
-      @monkey.update_data('', [])
+      @monkey.id = ''
+      @monkey.value = []
       if MooRedis::Database.db.exists("monkey:klaus")
         MooRedis::Database.db.del("monkey:klaus")
       end
@@ -91,22 +94,35 @@ describe Monkey do
     it "should save to database" do
       @monkey.save
       saved_data = MooRedis::Transformations.transform("monkey:klaus")
-      assert_equal @monkey, saved_data
+      assert_equal @monkey.value, saved_data
     end
 
     it "should reload from the database" do
       @monkey.save
       data = @monkey.to_a
-      @monkey.update_data(nil, 'franz')
-      refute_equal data, @monkey
+      @monkey.push('franz')
+      refute_equal data, @monkey.value
       @monkey.load
-      assert_equal data, @monkey
+      assert_equal data, @monkey.value
     end
 
     it "should destroy the record in the database" do
       @monkey.save
       @monkey.destroy
       assert_nil Monkey.find(@monkey.id)
+    end
+
+    it "should delete records from the db when autoupdate is enabled" do
+      @monkey.autosave = true
+      @monkey.delete('klaus')
+      assert_equal(["a@b.c", "kurz"], Monkey.find('klaus').value)
+    end
+
+    it "should store records in the db when autoupdate is enabled" do
+      @monkey.autosave = true
+      @monkey.push('blu')
+      assert_equal(["klaus", "a@b.c", "kurz", 'blu'],
+        Monkey.find('klaus').value)
     end
   end
 end

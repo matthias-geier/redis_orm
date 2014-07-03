@@ -1,30 +1,36 @@
 
 module MooRedis
   class KeySet < KeyValue
-    def update_data(*values)
-      id = values.shift
-      values = values.first if values.first.is_a?(Array)
-      self.id = id unless id.nil?
-      unless values.is_a?(Array)
-        raise ArgumentError.new("update_data expects an Array")
-      end
-
-      @data = values
-      self.autosave
+    def self.data_type
+      return Array
     end
+
+    def update_data(*data)
+      return super(data.flatten.uniq)
+    end
+    protected :update_data
 
     def save
-      return false if self.id.to_s.empty?
-      key = self.database_key
-      Database.db.del(key)
-      results = @data.map{ |v| Database.db.sadd(key, v) }
-      return results.all?
+      return super do |key|
+        Database.db.del(key)
+        results = @data.map{ |v| Database.db.sadd(key, v) }
+        next results.all?
+      end
     end
 
-    def load
-      key = self.database_key
-      data = self.class.transform(key)
-      self.update_data(nil, data)
+    def delete(value)
+      if @data.delete(value) && self.autosave? && !self.id.to_s.empty?
+        Database.db.srem(self.database_key, value)
+      end
+    end
+
+    def push(*values)
+      values = values.shift if values.first.is_a?(Array)
+      values.uniq!
+      @data += values - @data
+      if self.autosave? && !self.id.to_s.empty?
+        values.each{ |v| Database.db.sadd(self.database_key, v) }
+      end
     end
 
     def to_ary
@@ -32,12 +38,14 @@ module MooRedis
     end
     alias_method :to_a, :to_ary
 
-    def eql?(other)
-      return self == other
+    def ==(other)
+      return (other.is_a?(KeyValue) && self.id == other.id &&
+        @data.sort == other.value.sort)
     end
 
-    def ==(other)
-      return @data.sort == other.to_a.sort
+    def value=(val)
+      super
+      @data.uniq!
     end
   end
 end

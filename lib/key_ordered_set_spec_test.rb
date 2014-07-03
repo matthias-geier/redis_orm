@@ -48,15 +48,6 @@ describe Croc do
     end
   end
 
-  it "should multiassign values with update_fields by automatism" do
-    fields = [:name, :email, :created_at]
-    i = -1
-    key_values = fields.reduce({}){ |acc, f| acc.merge({ (i += 1) => f }) }
-    @croc.update_data(key_values)
-
-    fields.each_with_index{ |f, i| assert_equal f.to_s, @croc[i] }
-  end
-
   describe "with set fields" do
     before do
       @croc.id = 'croc'

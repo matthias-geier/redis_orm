@@ -28,13 +28,18 @@ module MooRedis
     end
 
     def update_data(*data)
-      data = data.first || self.class.data_type.new
+      if data.first.is_a?(self.class.data_type)
+        data = data.shift
+      elsif !data.is_a?(self.class.data_type)
+        data = self.class.data_type.new
+      end
       unless data.is_a?(self.class.data_type)
         raise ArgumentError.new("update_data expects a #{self.class.data_type}")
       end
       @data = data
       self.autosave
     end
+    protected :update_data
 
     def empty?
       return @data.empty?
@@ -61,7 +66,11 @@ module MooRedis
     def save
       return false if self.id.to_s.empty?
       key = self.database_key
-      return Database.db.set(key, @data) == Database::ok
+      if block_given?
+        return yield(key)
+      else
+        return Database.db.set(key, @data) == Database::ok
+      end
     end
 
     def destroy
@@ -72,7 +81,7 @@ module MooRedis
     def load
       key = self.database_key
       data = self.class.transform(key)
-      self.update_data(data)
+      @data = data
     end
 
     def database_key
@@ -90,7 +99,7 @@ module MooRedis
     end
 
     def autosave=(bool)
-      @autosave = (bool == true)
+      @autosave = bool
       self.save if self.autosave?
     end
 

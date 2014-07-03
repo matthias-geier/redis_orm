@@ -7,6 +7,14 @@ module MooRedis
       return Hash
     end
 
+    def self.redis_store_method
+      return :zadd
+    end
+
+    def self.redis_delete_method
+      return :zrem
+    end
+
     def self.range(id, first, last)
       key = "#{self.database_key_name}:#{id}"
       return unless Database.db.exists(key)
@@ -22,26 +30,13 @@ module MooRedis
     end
 
     def save
-      return false if self.id.to_s.empty?
-      key = self.database_key
-      Database.db.del(key)
-      results = @data.map{ |k, v| Database.db.zadd(key, k, v) }
-      return results.all?
-    end
-
-    def delete(key)
-      if (value = @data.delete(key)) && self.autosave? && !self.id.to_s.empty?
-        Database.db.zrem(self.database_key, value)
+      return super do |key|
+        Database.db.del(key)
+        results = @data.map do |k, v|
+          Database.db.zadd(key, k, v)
+        end
+        next results.all?
       end
     end
-
-    def store(key, value)
-      @data.delete(key)
-      @data.store(key, value.to_s)
-      if self.autosave? && !self.id.to_s.empty?
-        Database.db.zadd(self.database_key, key, value.to_s)
-      end
-    end
-    alias_method :[]=, :store
   end
 end

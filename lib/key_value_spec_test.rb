@@ -23,7 +23,7 @@ describe Mule do
 
   it "should find the object in the database and create initialize" do
     @mule.id = "25"
-    @mule.update_data("30")
+    @mule.value = '30'
     @mule.save
 
     loaded_mule = Mule.find("25")
@@ -31,8 +31,8 @@ describe Mule do
     @mule.destroy
   end
 
-  it "should set the value correctly through update_data" do
-    @mule.update_data("30")
+  it "should set the value correctly through value=" do
+    @mule.value = '30'
     assert_equal "30", @mule.value
   end
 
@@ -83,7 +83,7 @@ describe Mule do
   describe "with set fields" do
     before do
       @mule.id = 'klaus'
-      @mule.update_data('cool')
+      @mule.value = 'cool'
       if MooRedis::Database.db.exists("mule:klaus")
         MooRedis::Database.db.del("mule:klaus")
       end
@@ -91,7 +91,7 @@ describe Mule do
 
     after do
       @mule.id = ''
-      @mule.update_data(nil)
+      @mule.value = ''
       if MooRedis::Database.db.exists("mule:klaus")
         MooRedis::Database.db.del("mule:klaus")
       end
@@ -106,7 +106,7 @@ describe Mule do
     it "should reload from the database" do
       @mule.save
       data = @mule.value
-      @mule.update_data('franz')
+      @mule.value = 'franz'
       refute_equal data, @mule.value
       @mule.load
       assert_equal data, @mule.value
