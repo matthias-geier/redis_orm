@@ -5,6 +5,7 @@ require 'minitest/autorun'
 require './moo_redis/extensions/string'
 require './moo_redis/database'
 require './moo_redis/transformations'
+require './moo_redis/hash_functions'
 require './moo_redis/key_value'
 require './moo_redis/key_ordered_set'
 
@@ -23,7 +24,8 @@ describe Croc do
   end
 
   it "should find the object in the database and create initialize" do
-    @croc.update_data('croc', 10 => 'gnu', 20 => 'blu')
+    @croc.id = 'croc'
+    @croc.update_data(10 => 'gnu', 20 => 'blu')
     @croc.save
 
     loaded_croc = Croc.find("croc")
@@ -36,33 +38,13 @@ describe Croc do
   end
 
   it "should initialize with empty hash" do
-    assert_equal({}, @croc)
-  end
-
-  it "should implement eql? and == and compare internal hashes" do
-    cmp = { 10 => ['foo'], 20 => ['bar', 'mar'] }
-    @croc.update_data('croc', cmp)
-    assert @croc == cmp
-    assert @croc.eql?(cmp)
-  end
-
-  it "should implement empty? like a hash" do
-    assert @croc.empty?
-    @croc.update_data('croc', 10 => 'foo', 20 => ['bar', 'gnar'])
-    refute @croc.empty?
-  end
-
-  it "should behave like a hash on inspect and to_s" do
-    cmp = { 10 => ['foo'], 20 => ['bar', 'gnar'] }
-    @croc.update_data('croc', cmp)
-    assert_equal cmp.inspect, @croc.inspect
-    assert_equal cmp.to_s, @croc.to_s
+    assert_equal({}, @croc.value)
   end
 
   it "should set and get the values for each defined field" do
     [:name, :email, :created_at].each_with_index do |f, i|
       @croc[i] = f
-      assert_equal [f.to_s], @croc[i]
+      assert_equal f.to_s, @croc[i]
     end
   end
 
@@ -70,14 +52,15 @@ describe Croc do
     fields = [:name, :email, :created_at]
     i = -1
     key_values = fields.reduce({}){ |acc, f| acc.merge({ (i += 1) => f }) }
-    @croc.update_data('croc', key_values)
+    @croc.update_data(key_values)
 
-    fields.each_with_index{ |f, i| assert_equal [f.to_s], @croc[i] }
+    fields.each_with_index{ |f, i| assert_equal f.to_s, @croc[i] }
   end
 
   describe "with set fields" do
     before do
-      @croc.update_data('croc', 40 => 'moo', 20 => 'gnu')
+      @croc.id = 'croc'
+      @croc.update_data(40 => 'moo', 20 => 'gnu')
       if MooRedis::Database.db.exists("croc:croc")
         MooRedis::Database.db.del("croc:croc")
       end
@@ -94,24 +77,42 @@ describe Croc do
     it "should save to database" do
       @croc.save
       saved_data = MooRedis::Transformations.transform("croc:croc")
-      assert_equal @croc, saved_data
+      assert_equal @croc.value, saved_data
     end
 
     it "should reload from the database" do
       @croc.save
       data = @croc.to_h
-      new_data = data.dup
-      new_data.delete(20)
-      @croc.update_data(nil, new_data.merge({ 60 => 'blu' }))
-      refute_equal data, @croc
+      @croc.delete(20)
+      @croc.store(60, 'blu')
+      refute_equal data, @croc.value
       @croc.load
-      assert_equal data, @croc
+      assert_equal data, @croc.value
     end
 
     it "should destroy the record in the database" do
       @croc.save
       @croc.destroy
       assert_nil Croc.find(@croc.id)
+    end
+
+    it "should delete records from the db when autoupdate is enabled" do
+      @croc.autosave = true
+      @croc.delete(20)
+      assert_equal({ 40 => 'moo' }, Croc.find('croc').value)
+    end
+
+    it "should store records in the db when autoupdate is enabled" do
+      @croc.autosave = true
+      @croc.store(60, 'blu')
+      assert_equal 'blu', Croc.find('croc')[60]
+    end
+
+    it "should find smaller ranges when requested" do
+      @croc.store(60, 'blu')
+      @croc.save
+      assert_equal({ 40 => 'moo', 60 => 'blu' },
+        Croc.range('croc', 35, 60).value)
     end
   end
 end

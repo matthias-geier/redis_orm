@@ -35,12 +35,11 @@ module MooRedis
     end
     module_function :transform_set
 
-    def transform_zset(key)
-      return Database.db.zrange(key, 0, -1, :withscores => true).
+    def transform_zset(key, method=:zrange, first=0, last=-1)
+      return Database.db.send(method, key, first, last, :withscores => true).
         reduce({}) do |acc, (v, k)|
 
-        acc[k.to_i] ||= []
-        acc[k.to_i] << v
+        acc[k.to_i] = v
         acc
       end
     end

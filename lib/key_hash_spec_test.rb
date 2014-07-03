@@ -5,6 +5,7 @@ require 'minitest/autorun'
 require './moo_redis/extensions/string'
 require './moo_redis/database'
 require './moo_redis/transformations'
+require './moo_redis/hash_functions'
 require './moo_redis/key_value'
 require './moo_redis/key_hash'
 
@@ -23,7 +24,8 @@ describe User do
   end
 
   it "should find the object in the database and create initialize" do
-    @user.update_data(:name => 'franz', :id => '25')
+    @user.id = '25'
+    @user.update_data('name' => 'franz', 'id' => '25')
     @user.save
 
     loaded_user = User.find("25")
@@ -36,38 +38,38 @@ describe User do
   end
 
   it "should initialize with empty hash" do
-    assert_equal({}, @user)
+    assert_equal({}, @user.value)
   end
 
   it "should implement eql? and == and compare internal hashes" do
     cmp = { 'name' => 'foo' }
     @user.update_data(cmp)
-    assert @user == cmp
-    assert @user.eql?(cmp)
+    assert @user == User.new(false, nil, cmp)
+    assert @user.eql?(User.new(false, nil, cmp))
   end
 
   it "should implement empty? like a hash" do
     assert @user.empty?
-    @user.update_data({ :name => 'foo' })
+    @user.update_data({ 'name' => 'foo' })
     refute @user.empty?
   end
 
   it "should behave like a hash on inspect and to_s" do
     cmp = { 'name' => 'foo' }
     @user.update_data(cmp)
-    assert_equal cmp.inspect, @user.inspect
-    assert_equal cmp.to_s, @user.to_s
+    assert_equal User.new(false, nil, cmp).inspect, @user.inspect
+    assert_equal User.new(false, nil, cmp).to_s, @user.to_s
   end
 
   it "should set and get the values for each defined field" do
-    [:name, :email, :created_at].each_with_index do |f, i|
+    ['name', 'email', 'created_at'].each_with_index do |f, i|
       @user[f] = "gnu#{i}"
       assert_equal "gnu#{i}", @user[f.to_s]
     end
   end
 
   it "should multiassign values with update_fields by automatism" do
-    fields = [:name, :email, :created_at]
+    fields = ['name', 'email', 'created_at']
     key_values = fields.reduce({}){ |acc, f| acc.merge({ f => "m#{f}" }) }
     @user.update_data(key_values)
 
@@ -76,16 +78,17 @@ describe User do
 
   describe "with set fields" do
     before do
-      @user.update_data(:id => "klaus", :email => "a@b.c", :created_at =>
-        "2012-12-12", :name => "kurz")
+      @user.id = 'klaus'
+      @user.update_data('id' => "klaus", 'email' => "a@b.c", 'created_at' =>
+        "2012-12-12", 'name' => "kurz")
       if MooRedis::Database.db.exists("user:klaus")
         MooRedis::Database.db.del("user:klaus")
       end
     end
 
     after do
-      @user.update_data(:id => nil, :email => nil, :created_at => nil,
-        :name => nil)
+      @user.id = nil
+      @user.value = {}
       if MooRedis::Database.db.exists("user:klaus")
         MooRedis::Database.db.del("user:klaus")
       end
@@ -94,16 +97,16 @@ describe User do
     it "should save to database" do
       @user.save
       saved_data = MooRedis::Transformations.transform("user:klaus")
-      assert_equal @user, saved_data
+      assert_equal @user.value, saved_data
     end
 
     it "should reload from the database" do
       @user.save
       data = @user.to_h
-      @user.update_data({ :email => 'franz' })
-      refute_equal data, @user
+      @user.update_data({ 'email' => 'franz' })
+      refute_equal data, @user.value
       @user.load
-      assert_equal data, @user
+      assert_equal data, @user.value
     end
 
     it "should destroy the record in the database" do

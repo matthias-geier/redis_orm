@@ -1,49 +1,24 @@
 
 module MooRedis
   class KeyOrderedSet < KeyValue
+    include HashFunctions
 
-    def self.find(id, asave=false)
+    def self.data_type
+      return Hash
+    end
+
+    def self.range(id, first, last)
       key = "#{self.database_key_name}:#{id}"
       return unless Database.db.exists(key)
-      return self.new(asave, id, transform(key))
-    end
-
-    def [](score)
-      return @data[score]
-    end
-
-    def []=(score, value)
-      self.update_data(nil, { score => value })
+      data = transform_zset(key, :zrangebyscore, first, last)
+      return self.new(false, id, data)
     end
 
     def value=(val)
-      if !val.is_a?(Hash) || val.keys.any?{ |k| !k.is_a?(Numeric) }
+      if !val.respond_to?(:keys) || val.keys.any?{ |k| !self.key_valid?(k) }
         raise ArgumentError.new('ordered sets only accept numbers as Hash keys')
       end
       super
-    end
-
-    def update_data(*values)
-      id = values.shift
-      if values.first.is_a?(Hash)
-        values = values.first
-      else
-        values = {}
-      end
-      self.id = id unless id.nil?
-      if !values.is_a?(Hash) || values.keys.any?{ |k| !k.is_a?(Numeric) }
-        raise ArgumentError.new("update_data expects numbers as Hash keys")
-      end
-
-      @data ||= {}
-      @data = values.reduce(@data) do |acc, (k, v)|
-        acc[k.to_i] ||= []
-        v = [v] unless v.is_a?(Array)
-        v.map!(&:to_s)
-        acc[k.to_i] += v - acc[k.to_i]
-        acc
-      end
-      self.autosave
     end
 
     def save
@@ -54,29 +29,19 @@ module MooRedis
       return results.all?
     end
 
-    def load
-      key = self.database_key
-      data = self.class.transform(key)
-      @data = {}
-      self.update_data(nil, data)
+    def delete(key)
+      if (value = @data.delete(key)) && self.autosave? && !self.id.to_s.empty?
+        Database.db.zrem(self.database_key, value)
+      end
     end
 
-    def to_hash
-      return @data.dup
+    def store(key, value)
+      @data.delete(key)
+      @data.store(key, value.to_s)
+      if self.autosave? && !self.id.to_s.empty?
+        Database.db.zadd(self.database_key, key, value.to_s)
+      end
     end
-    alias_method :to_h, :to_hash
-
-    def to_ary
-      return @data.values.flatten
-    end
-    alias_method :to_a, :to_ary
-
-    def eql?(other)
-      return self == other
-    end
-
-    def ==(other)
-      return @data == other
-    end
+    alias_method :[]=, :store
   end
 end

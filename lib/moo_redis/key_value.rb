@@ -6,6 +6,10 @@ module MooRedis
     class << self; public :transform end
     attr_accessor :id
 
+    def self.data_type
+      return String
+    end
+
     def self.find(id, asave=false)
       key = "#{self.database_key_name}:#{id}"
       return unless Database.db.exists(key)
@@ -16,16 +20,19 @@ module MooRedis
       return self.name.underscore
     end
 
-    def initialize(asave=false, *data)
+    def initialize(asave=false, id='', *data)
       @autosave = asave
+      @data = self.class.data_type.new
+      self.id = id || ''
       self.update_data(*data)
     end
 
-    def update_data(*args)
-      while(args.length < 2); args << ""; end
-      id, val = args
-      self.id = id unless id.nil?
-      @data = val unless val.nil?
+    def update_data(*data)
+      data = data.first || self.class.data_type.new
+      unless data.is_a?(self.class.data_type)
+        raise ArgumentError.new("update_data expects a #{self.class.data_type}")
+      end
+      @data = data
       self.autosave
     end
 
@@ -34,11 +41,11 @@ module MooRedis
     end
 
     def inspect
-      return @data.inspect
+      return "#{self.class.name}:#{self.id} #{@data.inspect}"
     end
 
     def to_s
-      return @data.to_s
+      return "#{self.class.name}:#{self.id}"
     end
     alias_method :to_str, :to_s
 
@@ -47,7 +54,8 @@ module MooRedis
     end
 
     def ==(other)
-      return @data == other
+      return (other.is_a?(KeyValue) && self.id == other.id &&
+        @data == other.value)
     end
 
     def save
@@ -58,13 +66,13 @@ module MooRedis
 
     def destroy
       key = self.database_key
-      return Database.db.del(key) == 1
+      return Database.db.del(key) > 0
     end
 
     def load
       key = self.database_key
       data = self.class.transform(key)
-      self.update_data(nil, data)
+      self.update_data(data)
     end
 
     def database_key
@@ -83,6 +91,7 @@ module MooRedis
 
     def autosave=(bool)
       @autosave = (bool == true)
+      self.save if self.autosave?
     end
 
     def value
@@ -90,9 +99,10 @@ module MooRedis
     end
 
     def value=(val)
+      unless val.is_a?(self.class.data_type)
+        val = self.class.data_type.new
+      end
       @data = val
     end
   end
-
-
 end
