@@ -78,5 +78,5 @@ Each data type implementation is sufficiently tested and can currently be run
 by cloning the repository, navigating into the base folder and calling
 
 ```bash
-  ruby -Ilib:lib test/test_runner.rb
+  ruby -Ilib test/test_runner.rb
 ```
