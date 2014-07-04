@@ -64,7 +64,7 @@ module Redisabel
     end
 
     def save
-      return false if self.id.to_s.empty?
+      return false if self.id.to_s.empty? || self.frozen?
       key = self.database_key
       if block_given?
         return yield(key)
@@ -95,7 +95,7 @@ module Redisabel
     protected :autosave
 
     def autosave?
-      return @autosave
+      return (!self.frozen? && @autosave)
     end
 
     def autosave=(bool)

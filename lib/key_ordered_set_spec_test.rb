@@ -105,6 +105,14 @@ describe Croc do
       assert_equal({ 40 => 'moo', 60 => 'blu' },
         Croc.range('croc', 35, 60).value)
     end
+
+    it "should not be able to modify sliced objects" do
+      @croc.save
+      croc = Croc.range('croc', 35, 45)
+      assert_raises(RuntimeError){ croc.value = {} }
+      refute croc.save
+      assert_raises(RuntimeError){ croc.load }
+    end
   end
 end
 

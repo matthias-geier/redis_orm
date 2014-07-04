@@ -19,7 +19,7 @@ module Redisabel
       key = "#{self.database_key_name}:#{id}"
       return unless Database.db.exists(key)
       data = transform_zset(key, :zrangebyscore, first, last)
-      return self.new(false, id, data)
+      return self.new(false, id, data).freeze
     end
 
     def value=(val)
