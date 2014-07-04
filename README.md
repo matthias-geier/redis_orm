@@ -11,7 +11,7 @@ Dependencies
 =========
 
 To run the code a Redis database is required and these gems:
-* redisrb
+* redis
 * minitest
 
 
