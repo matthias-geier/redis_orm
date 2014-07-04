@@ -5,6 +5,7 @@ require 'minitest/autorun'
 require './redisabel/extensions/string'
 require './redisabel/database'
 require './redisabel/transformations'
+require './redisabel/finders'
 require './redisabel/key_value'
 
 class Mule < Redisabel::KeyValue
@@ -116,6 +117,17 @@ describe Mule do
       @mule.save
       @mule.destroy
       assert_nil Mule.find(@mule.id)
+    end
+
+    it "should filter patterns into objects" do
+      @mule.save
+      @mule2 = Mule.new(true, 'fritz', @mule.value)
+      @mule3 = Mule.new(true, 'franz', @mule.value)
+
+      filtered_mules = Mule.filter('fr*')
+      refute filtered_mules.include?(@mule)
+      assert filtered_mules.include?(@mule2)
+      assert filtered_mules.include?(@mule3)
     end
   end
 end

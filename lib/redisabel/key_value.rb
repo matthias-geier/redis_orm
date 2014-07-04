@@ -2,18 +2,13 @@
 module Redisabel
   class KeyValue
     extend Transformations
+    extend Finders
 
     class << self; public :transform end
     attr_accessor :id
 
     def self.data_type
       return String
-    end
-
-    def self.find(id, asave=false)
-      key = "#{self.database_key_name}:#{id}"
-      return unless Database.db.exists(key)
-      return self.new(asave, id, transform(key))
     end
 
     def self.database_key_name

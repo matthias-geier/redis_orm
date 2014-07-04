@@ -5,6 +5,7 @@ require 'minitest/autorun'
 require './redisabel/extensions/string'
 require './redisabel/database'
 require './redisabel/transformations'
+require './redisabel/finders'
 require './redisabel/key_value'
 require './redisabel/key_set'
 
