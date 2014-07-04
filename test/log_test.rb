@@ -1,14 +1,8 @@
 gem 'minitest'
 
 require 'redis'
+require 'redisabel'
 require 'minitest/autorun'
-require './redisabel/extensions/string'
-require './redisabel/database'
-require './redisabel/transformations'
-require './redisabel/hash_functions'
-require './redisabel/key_value'
-require './redisabel/key_ordered_set'
-require './redisabel/key_hash'
 
 class Logs < Redisabel::KeyOrderedSet
 end

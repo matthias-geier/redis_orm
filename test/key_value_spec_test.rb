@@ -1,12 +1,8 @@
 gem 'minitest'
 
 require 'redis'
+require 'redisabel'
 require 'minitest/autorun'
-require './redisabel/extensions/string'
-require './redisabel/database'
-require './redisabel/transformations'
-require './redisabel/finders'
-require './redisabel/key_value'
 
 class Mule < Redisabel::KeyValue
 end
@@ -128,6 +124,8 @@ describe Mule do
       refute filtered_mules.include?(@mule)
       assert filtered_mules.include?(@mule2)
       assert filtered_mules.include?(@mule3)
+      @mule2.destroy
+      @mule3.destroy
     end
   end
 end

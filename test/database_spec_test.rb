@@ -1,9 +1,8 @@
 gem 'minitest'
 
 require 'redis'
+require 'redisabel'
 require 'minitest/autorun'
-require './redisabel/extensions/string'
-require './redisabel/database'
 
 Redisabel::Database.create
 

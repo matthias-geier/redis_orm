@@ -53,6 +53,11 @@ Available data type implementations:
 * Redisabel::KeyOrderedSet
 
 ```ruby
+  require 'redis'
+  require 'redisabel'
+
+  Redisabel::Database.create
+
   class Monkey < Redisabel::Keyvalue
   end
 
@@ -70,10 +75,8 @@ Tests
 =========
 
 Each data type implementation is sufficiently tested and can currently be run
-by cloning the repository, navigating into the lib folder and calling
+by cloning the repository, navigating into the base folder and calling
 
 ```bash
-  ruby key_value_spec_test.rb
+  ruby -Ilib:lib test/test_runner.rb
 ```
-
-or any other test case.
