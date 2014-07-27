@@ -29,15 +29,6 @@
 #   s
 #   => "file_reader"
 #
-# SQL stings can be executed when the database is created by calling #execute.
-# Like the Ink::Database.query method, #execute takes a return-type (default:
-# Array) and a database connection instance. When using anything but Array-like
-# datastructures, it is recommended to use a block for assigning the
-# appropriate fields.
-#
-#   "SELECT * FROM tags;".execute
-#   => [[1, "moo"], [2, "cloud"], ..]
-#
 #
 #
 class String
