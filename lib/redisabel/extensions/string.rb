@@ -37,7 +37,8 @@ class String
   end
 
   def camelize
-    return self.to_s.split(/_/).map(&:capitalize).join
+    return self.to_s.split(/_/).map(&:capitalize).join.
+      split(/\//).map(&:capitalize).join('::')
   end
 
   def camelize!
@@ -45,8 +46,8 @@ class String
   end
 
   def underscore
-    return self.to_s.split(/([A-Z]?[^A-Z]*)/).reject(&:empty?).
-      map(&:downcase).join('_')
+    return self.to_s.sub(/:+/, '/').split(/([A-Z]?[^A-Z]*)/).reject(&:empty?).
+      map(&:downcase).join('_').gsub(/\/_/, '/')
   end
 
   def underscore!
