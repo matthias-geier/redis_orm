@@ -17,7 +17,7 @@ module Redisabel
 
     def self.close
       return unless @@db
-      @@db.disconnect
+      @@db.db.quit
     end
 
     def self.db
